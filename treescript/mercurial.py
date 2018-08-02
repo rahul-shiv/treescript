@@ -56,7 +56,12 @@ def build_hg_environment():
 
     """
     env = os.environ.copy()
-    env['HGRCPATH'] = HGRCPATH
+    if 'hgrc' in context.config:
+        env['HGRCPATH'] = context.config['hgrc']
+        if not os.path.exists(env['HGRCPATH']):
+            raise FileNotFoundError(env['HGRCPATH'])
+    else:
+        env['HGRCPATH'] = HGRCPATH
     env['HGEDITOR'] = ('"' + sys.executable + '"' + ' -c "import sys; sys.exit(0)"')
     env["HGMERGE"] = "internal:merge"
     env["HGENCODING"] = "utf-8"

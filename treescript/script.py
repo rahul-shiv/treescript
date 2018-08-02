@@ -75,6 +75,7 @@ def get_default_config(base_dir=None):
     default_config = {
         'work_dir': os.path.join(base_dir, 'work_dir'),
         'hg': 'hg',
+        'hgrc': os.path.join(os.path.dirname(__file__), 'data', 'hgrc'),
         'schema_file': os.path.join(os.path.dirname(__file__), 'data', 'treescript_task_schema.json'),
     }
     return default_config
