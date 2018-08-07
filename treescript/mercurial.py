@@ -43,7 +43,7 @@ def build_hg_command(context, *args):
 
 
 # build_hg_environment {{{1
-def build_hg_environment():
+def build_hg_environment(context):
     """Generate an environment suitable for running mercurial programatically.
 
     This function sets the hgrc to one provided in the package and ensures
@@ -56,10 +56,12 @@ def build_hg_environment():
 
     """
     env = os.environ.copy()
-    if 'hgrc' in context.config:
+    if context.config['hgrc']:
         env['HGRCPATH'] = context.config['hgrc']
         if not os.path.exists(env['HGRCPATH']):
-            raise FileNotFoundError(env['HGRCPATH'])
+            log.warning(FileNotFoundError(env['HGRCPATH']))
+            log.info('Using default hgrc')
+            env['HGRCPATH'] = HGRCPATH
     else:
         env['HGRCPATH'] = HGRCPATH
     env['HGEDITOR'] = ('"' + sys.executable + '"' + ' -c "import sys; sys.exit(0)"')
@@ -92,7 +94,7 @@ async def run_hg_command(context, *args, local_repo=None):
 
     """
     command = build_hg_command(context, *args)
-    env = build_hg_environment()
+    env = build_hg_environment(context)
     if local_repo:
         command.extend(['-R', local_repo])
     await execute_subprocess(command, env=env)

@@ -67,9 +67,13 @@ def test_build_hg_cmd(context, hg, args):
     k: "whatever" for k in UNEXPECTED_ENV_KEYS
 }
 ))
-def test_build_hg_env(mocker, my_env):
+@pytest.mark.parametrize('hgrc', ("treescript/data/hgrc", "", "some/random/location"))
+def test_build_hg_env(mocker, context, my_env, hgrc):
+    context.config['hgrc'] = hgrc
     mocker.patch.dict(mercurial.os.environ, my_env)
-    returned_env = mercurial.build_hg_environment()
+    returned_env = mercurial.build_hg_environment(context)
+    if context.config['hgrc']:
+        assert os.path.exists(returned_env['HGRCPATH'])
     assert (set(UNEXPECTED_ENV_KEYS) & set(returned_env.keys())) == set()
     assert returned_env['HGPLAIN'] == "1"
     assert returned_env['LANG'] == "C"
@@ -94,7 +98,7 @@ async def test_run_hg_command(mocker, context, args):
 
     await mercurial.run_hg_command(context, *args)
 
-    env_call.assert_called_with()
+    env_call.assert_called_with(context)
     cmd_call.assert_called_with(context, *args)
     assert called_args[0] == [['hg'] + args, {'env': env}]
     assert len(called_args) == 1
@@ -117,7 +121,7 @@ async def test_run_hg_command_localrepo(mocker, context):
 
     await mercurial.run_hg_command(context, *args, local_repo='/tmp/localrepo')
 
-    env_call.assert_called_with()
+    env_call.assert_called_with(context)
     cmd_call.assert_called_with(context, *args)
     assert len(called_args) == 1
     is_slice_in_list(['-R', '/tmp/localrepo'], called_args[0][0])
